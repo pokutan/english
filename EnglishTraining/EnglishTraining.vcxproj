@@ -108,7 +108,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>XCOPY $(TargetPath) ..\..\$(TargetFileName) /Y /R</Command>
+      <Command>XCOPY $(TargetPath) f:\Dropbox\eng\my_app\$(TargetFileName) /Y /R</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copy to Dropbox folder</Message>
@@ -140,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\EnglishTraining.ico" />
+    <Image Include="res\letter-e-48.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

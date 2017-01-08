@@ -142,14 +142,15 @@ void CEnglishTrainingDlg::fill_ui_data(_In_ bool update_prev_){
         SourceWord.SetWindowText(_rus2eng_learn ? it->first.c_str() : it->second.c_str());
         _curr_right_transl = !_rus2eng_learn ? it->first : it->second;
         Stat_Result.SetWindowTextW(L"Choose Translation");
-        if(update_prev_ && _mode_learn && _curr_pair.first.length()){
+        if(update_prev_ && _curr_pair.first.length()){
             s = _curr_pair.first;
             s += L" - ";
             s += _curr_pair.second;
             PrevTranslation.SetWindowTextW(s.c_str());
         }
         _curr_pair = *it;
-    }
+    }else
+        _curr_pair = MAP_PAIR(L"", L"");
     ActivateKeyboardLayout(_mode_learn ? (_rus2eng_learn ? _rus_kbd : _eng_kbd) : (!_opt._static_data._vocab_from_rus2eng ? _rus_kbd : _eng_kbd), KLF_SETFORPROCESS);
     string ss = _caption;
     ss += " - ";
@@ -279,16 +280,25 @@ void CEnglishTrainingDlg::OnBnClickedBtnSubmit(){
     bool is_substr = false, suggest_found = false;
     wstring compare_to, substr_full_transl;
     int rus_to_eng = _mode_learn ? !_rus2eng_learn : _opt._static_data._vocab_from_rus2eng;
+    auto f = [&](WORDS_MAP& map_){ for(it = _words_map.begin(); it != _words_map.end(); ++it)if(it->second == curr_translation)break; };
     if(!rus_to_eng){
         // seek for Russian translation
         if(_curr_pair.second == curr_translation)
             compare_to = _curr_pair.first;
-        else if(wcslen(curr_translation) >= 3 && (wcsstr(_curr_pair.second.c_str(),curr_translation) != NULL) && (_curr_pair.second != curr_translation)){
-            if(!_mode_learn || (_mode_learn && _curr_pair.second == _curr_right_transl)){
-                is_substr = true;
-                substr_full_transl = _curr_pair.second;
-                compare_to = _curr_pair.first;
-                suggest_found = true;
+        else{
+            if(!_mode_learn){
+                f(_words_map);
+                if(it == _words_map.end())
+                    f(_most_active_words_map);
+                _curr_pair = MAP_PAIR(it->first, it->second);
+            }
+            if(wcslen(curr_translation) >= 3 && (wcsstr(_curr_pair.second.c_str(), curr_translation) != NULL) && (_curr_pair.second != curr_translation)){
+                if(!_mode_learn || (_mode_learn && _curr_pair.second == _curr_right_transl)){
+                    is_substr = true;
+                    substr_full_transl = _curr_pair.second;
+                    compare_to = _curr_pair.first;
+                    suggest_found = true;
+                }
             }
         }
     }else{
@@ -302,14 +312,17 @@ void CEnglishTrainingDlg::OnBnClickedBtnSubmit(){
                     suggest_found = true;
                     break;
                 }
-        if(it != _words_map.end())
-            compare_to = it->second;
+        if(_mode_learn){
+            if(it != _words_map.end())
+                compare_to = it->second;
+        }else
+            _curr_pair = MAP_PAIR(it->first, it->second);
     }
     // after 3 wrong tries we start to suggest translation
     static int try_counter = 1;
     static size_t i = 0;
 
-    if(!compare_to.length() && !suggest_found){
+    if(_mode_learn && !compare_to.length() && !suggest_found){
         if(++try_counter <= 3)
             _text_err = L"Wrong! Try Again: ";
         else if(i < _curr_right_transl.length())
@@ -325,10 +338,7 @@ void CEnglishTrainingDlg::OnBnClickedBtnSubmit(){
     if(compare_to.length())
         _last_eng_word = _curr_pair.first;
     if(!_mode_learn){
-        wstring s = is_substr ? substr_full_transl : curr_translation;
-        s += L" - ";
-        if(compare_to.length())
-            s += !rus_to_eng ? _curr_pair.first : _curr_pair.second;
+        wstring s = _curr_pair.first + L" - " + _curr_pair.second;
         Stat_Result.SetWindowTextW(s.c_str());
         return;
     }
@@ -371,6 +381,10 @@ void CEnglishTrainingDlg::OnBnClickedBtnReload(){
 void CEnglishTrainingDlg::OnBnClickedRadioChoose(){
     CheckRadioButton(IDC_RADIO1,IDC_RADIO2,IDC_RADIO2);
     CheckTranslateFromEng.EnableWindow(TRUE);
+    if(CWnd* edit_combo = Translations.GetWindow(GW_CHILD)){
+        Translations.ModifyStyle(CBS_DROPDOWN, CBS_DROPDOWNLIST);
+        edit_combo->SendMessage(EM_SETREADONLY ,TRUE ,0);
+    }
     _mode_learn = false;
     Stat_Result.SetWindowTextW(L"Choose word from combo");
     SourceWord.SetWindowTextW(L"");
@@ -381,6 +395,10 @@ void CEnglishTrainingDlg::OnBnClickedRadioChoose(){
 void CEnglishTrainingDlg::OnBnClickedRadioLearn(){
     CheckRadioButton(IDC_RADIO1,IDC_RADIO2,IDC_RADIO1);
     CheckTranslateFromEng.EnableWindow(FALSE);
+    if(CWnd* edit_combo = Translations.GetWindow(GW_CHILD)){
+        Translations.ModifyStyle(CBS_DROPDOWNLIST, CBS_DROPDOWN);
+        edit_combo->SendMessage(EM_SETREADONLY, FALSE, 0);
+    }
     _mode_learn = true;
     Stat_Result.SetWindowTextW(L"Choose Translation");
     SourceWord.SetWindowTextW(L"");

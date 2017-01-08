@@ -65,5 +65,8 @@
     <Image Include="res\EnglishTraining.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\letter-e-48.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
