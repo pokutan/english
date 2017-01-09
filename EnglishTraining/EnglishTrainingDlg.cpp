@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "EnglishTraining.h"
 #include "EnglishTrainingDlg.h"
 #include "afxdialogex.h"
