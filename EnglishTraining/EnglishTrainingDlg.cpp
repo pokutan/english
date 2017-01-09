@@ -4,8 +4,9 @@
 #include "afxdialogex.h"
 #include "SysToolsDyn.h"
 #include "KDWinInet.h"
-#include "UT_String.h"
 
+// TODO: these would be removed
+#include "UT_String.h"
 #pragma comment(lib, "SysTools")
 
 #ifdef _DEBUG
